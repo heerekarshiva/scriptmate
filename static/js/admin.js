@@ -379,47 +379,6 @@ function switchView(view,el) {
   setText('viewSub',subs[view]||'');
 }
 
-/* ── Seed demo data ── */
-function seedDemo() {
-  const names    = ['Ravi Kumar','Priya Sharma','Arun Reddy','Sneha Patel','Kiran Rao','Divya Nair','Rahul Gupta','Ananya Singh','Vikram Mehta','Pooja Verma'];
-  const colleges = ['JNTU Hyderabad','Osmania University','VIT Vellore','NIT Warangal','BITS Pilani'];
-  const subjects = ['Data Structures','DBMS','Networks','OS','Maths-3','Electronics','Physics Lab','Chemistry'];
-  const levels   = ['B.Tech','Degree','Masters','Diploma'];
-  const wtypes   = ['Assignment','Class Work','Record','Observation'];
-
-  function calcPrice(pages, hasGraphs) {
-    const base = pages<=15 ? pages*5 : (75+(pages-15)*3);
-    const gc   = hasGraphs ? pages*3 : 0;
-    return {base_cost:Math.round(base*100)/100, graph_charge:Math.round(gc*100)/100, grand_total:Math.round((base+gc)*100)/100};
-  }
-  function rnd(arr){return arr[Math.floor(Math.random()*arr.length)];}
-  function randInt(a,b){return a+Math.floor(Math.random()*(b-a+1));}
-
-  const existing = LS.get(ORDERS_KEY) || [];
-  const demo = [];
-  for(let i=0;i<20;i++){
-    const pages=randInt(2,60), graphs=Math.random()>0.5;
-    const p=calcPrice(pages,graphs);
-    const lv=rnd(levels);
-    const maxYr=lv==='Masters'?2:lv==='Diploma'?3:4;
-    const ts=new Date(Date.now()-randInt(0,60)*86400000).toISOString();
-    const oid='SM-DEMO-'+Math.random().toString(36).substring(2,10).toUpperCase();
-    demo.push({
-      id:oid, created_at:ts,
-      full_name:rnd(names), phone:'+91 9'+randInt(100000000,999999999),
-      email:'demo@example.com', college:rnd(colleges),
-      roll_number:String(randInt(20,24))+'A91A0'+randInt(100,999),
-      level:lv, year:randInt(1,maxYr), semester:randInt(1,8),
-      work_type:rnd(wtypes), subject:rnd(subjects), pages,
-      has_graphs:graphs, instructions:'Demo order', file_name:'',
-      base_cost:p.base_cost, graph_charge:p.graph_charge, grand_total:p.grand_total
-    });
-  }
-  const merged = [...demo, ...existing];
-  LS.set(ORDERS_KEY, merged.slice(0,500));
-  toast(`Seeded 20 demo orders!`);
-  loadAll();
-}
 
 /* ── Date formatter ── */
 function fmtDate(ts) {
