@@ -1,3 +1,4 @@
+
 /* ═══════════════════════════════════════════
    ScriptMate — Main Stylesheet v3.0
    Aesthetic: Refined dark academia / ink & parchment
@@ -281,7 +282,20 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance:none }
 .terms-list li { font-size:clamp(.72rem,2vw,.78rem); color:var(--mist3); padding:3px 0 3px 16px; position:relative; line-height:1.5 }
 .terms-list li::before { content:'→'; position:absolute; left:0; color:var(--gold); font-size:.67rem; top:5px }
 .agree-row { display:flex; align-items:flex-start; gap:9px; margin-top:12px; cursor:pointer }
-.agree-row input[type="checkbox"] { width:16px; height:16px; accent-color:var(--sage); cursor:pointer; margin-top:2px; flex-shrink:0 }
+.agree-row input[type="checkbox"] {
+  width:18px; height:18px; flex-shrink:0; cursor:pointer; margin-top:2px;
+  appearance:none; -webkit-appearance:none;
+  border:2px solid var(--sage); border-radius:4px;
+  background:transparent; position:relative; transition:background .2s,border-color .2s;
+}
+.agree-row input[type="checkbox"]:checked {
+  background:var(--sage); border-color:var(--sage);
+}
+.agree-row input[type="checkbox"]:checked::after {
+  content:''; position:absolute; left:4px; top:1px;
+  width:6px; height:10px; border:2px solid #fff;
+  border-top:none; border-left:none; transform:rotate(45deg);
+}
 .agree-row label { font-size:clamp(.75rem,2vw,.8rem); color:var(--mist2); cursor:pointer; line-height:1.45 }
 
 /* ── BUTTONS ── */
