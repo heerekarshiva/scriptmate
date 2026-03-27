@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+<title>ScriptMate — Academic Handwriting Service</title>
+<meta name="description" content="Professional academic handwriting service for students. Assignments, Class Work, Records & Observations."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="static/css/main.css"/>
+</head>
+<body>
+<div id="app">
+
+<!-- HEADER -->
+<header class="header">
+  <div class="container">
+    <div class="hdr-inner">
+      <a class="logo" href="index.html">
+        <div class="logo-icon">✒️</div>
+        <span class="logo-text">Script<span>Mate</span></span>
+      </a>
+      <div class="hdr-right">
+        <span class="db-badge"><span class="db-dot on" id="dbDot"></span><span id="dbTxt">Static Mode</span></span>
+        <button class="btn-ghost" onclick="openHistory()">📋 History</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main>
+<div class="container">
+<div class="stepper-wrap">
+
+  <!-- Stepper -->
+  <nav class="stepper" aria-label="Order steps">
+    <div class="step-item-wrap"><div class="step-circle active" id="sc1">1</div><span class="step-lbl active" id="sl1">Personal</span></div>
+    <div class="step-conn" id="cn1"></div>
+    <div class="step-item-wrap"><div class="step-circle" id="sc2">2</div><span class="step-lbl" id="sl2">Academic</span></div>
+    <div class="step-conn" id="cn2"></div>
+    <div class="step-item-wrap"><div class="step-circle" id="sc3">3</div><span class="step-lbl" id="sl3">Order</span></div>
+    <div class="step-conn" id="cn3"></div>
+    <div class="step-item-wrap"><div class="step-circle" id="sc4">4</div><span class="step-lbl" id="sl4">Confirm</span></div>
+  </nav>
+  <div class="prog-wrap"><div class="prog-fill" id="progFill" style="width:25%"></div></div>
+
+  <!-- STEP 1 — Personal -->
+  <section id="s1" class="step-section">
+    <div class="card">
+      <div class="card-title">Personal Information</div>
+      <div class="card-sub">Your details are saved locally for your convenience next time.</div>
+
+      <div class="autofill-bar hidden" id="autofillBar">
+        <span>✨</span><p>Welcome back! Details auto-filled.</p>
+        <button class="af-clear" onclick="clearSaved()">Clear</button>
+      </div>
+
+      <div class="field">
+        <label class="lbl">Full Name <span class="req">*</span></label>
+        <div class="inp-wrap"><span class="inp-ico">👤</span>
+          <input type="text" id="f_name" class="has-ico" placeholder="e.g. Ravi Kumar" autocomplete="name"/>
+        </div>
+        <div class="err" id="e_name">⚠ Minimum 3 characters required</div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label class="lbl">WhatsApp / Phone <span class="req">*</span></label>
+          <div class="inp-wrap"><span class="inp-ico">💬</span>
+            <input type="tel" id="f_phone" class="has-ico" placeholder="+91 98765 43210" maxlength="15" autocomplete="tel"/>
+          </div>
+          <div class="err" id="e_phone">⚠ Enter a valid phone number</div>
+        </div>
+        <div class="field">
+          <label class="lbl">Email Address <span class="req">*</span></label>
+          <div class="inp-wrap"><span class="inp-ico">✉️</span>
+            <input type="email" id="f_email" class="has-ico" placeholder="you@example.com" autocomplete="email"/>
+          </div>
+          <div class="err" id="e_email">⚠ Enter a valid email address</div>
+        </div>
+      </div>
+
+      <div class="btn-row"><button class="btn btn-primary" onclick="nextStep(2)">Continue →</button></div>
+    </div>
+  </section>
+
+  <!-- STEP 2 — Academic -->
+  <section id="s2" class="step-section hidden">
+    <div class="card">
+      <div class="card-title">Academic Details</div>
+      <div class="card-sub">Tell us about your course and the type of work needed.</div>
+
+      <div class="field-row">
+        <div class="field">
+          <label class="lbl">College Name <span class="req">*</span></label>
+          <input type="text" id="f_college" placeholder="e.g. JNTU Hyderabad"/>
+          <div class="err" id="e_college">⚠ Enter college name (min 3 chars)</div>
+        </div>
+        <div class="field">
+          <label class="lbl">Roll Number <span class="req">*</span></label>
+          <input type="text" id="f_roll" placeholder="e.g. 21A91A0501"/>
+          <div class="err" id="e_roll">⚠ Enter your roll number</div>
+        </div>
+      </div>
+
+      <div class="field-row-3">
+        <div class="field">
+          <label class="lbl">Level <span class="req">*</span></label>
+          <select id="f_level" onchange="updateYearOptions()"><option value="">— Select —</option>
+            <option>B.Tech</option><option>Degree</option><option>Masters</option><option>Diploma</option>
+          </select>
+          <div class="err" id="e_level">⚠ Select level</div>
+        </div>
+        <div class="field">
+          <label class="lbl">Year <span class="req">*</span></label>
+          <select id="f_year"><option value="">—</option>
+            <option>1</option><option>2</option><option>3</option><option>4</option>
+          </select>
+          <div class="err" id="e_year">⚠ Select</div>
+        </div>
+        <div class="field">
+          <label class="lbl">Semester <span class="req">*</span></label>
+          <select id="f_sem"><option value="">—</option>
+            <option>1</option><option>2</option><option>3</option><option>4</option>
+            <option>5</option><option>6</option><option>7</option><option>8</option>
+          </select>
+          <div class="err" id="e_sem">⚠ Select</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="lbl">Work Type <span class="req">*</span></label>
+        <div class="chip-group">
+          <label class="chip"><input type="radio" name="wtype" value="Assignment"/><span class="chip-lbl">📝 Assignment</span></label>
+          <label class="chip"><input type="radio" name="wtype" value="Class Work"/><span class="chip-lbl">📒 Class Work</span></label>
+          <label class="chip"><input type="radio" name="wtype" value="Record"/><span class="chip-lbl">📗 Record</span></label>
+          <label class="chip"><input type="radio" name="wtype" value="Observation"/><span class="chip-lbl">🔬 Observation</span></label>
+        </div>
+        <div class="err" id="e_wtype">⚠ Select a work type</div>
+      </div>
+
+      <div class="field">
+        <label class="lbl">Extras</label>
+        <div class="chip-group">
+          <label class="chip">
+            <input type="checkbox" id="f_graphs" onchange="calcBillLocal()"/>
+            <span class="chip-lbl">📊 Includes Graphs <span class="extra-note">(+₹3/page)</span></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="nextStep(1)">← Back</button>
+        <button class="btn btn-primary" onclick="nextStep(3)">Continue →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 3 — Order Details -->
+  <section id="s3" class="step-section hidden">
+    <div class="card">
+      <div class="card-title">Order Details</div>
+      <div class="card-sub">Specify subject, page count, and any special instructions.</div>
+
+      <div class="field">
+        <label class="lbl">Subject Name <span class="req">*</span></label>
+        <input type="text" id="f_subject" placeholder="e.g. Data Structures & Algorithms"/>
+        <div class="err" id="e_subject">⚠ Enter the subject name</div>
+      </div>
+
+      <div class="field">
+        <label class="lbl">Number of Pages <span class="req">*</span></label>
+        <div class="num-step">
+          <button type="button" class="ns-btn" onclick="chgPg(-1)">−</button>
+          <input type="number" id="f_pages" value="5" min="1" max="500" oninput="calcBillLocal()"/>
+          <button type="button" class="ns-btn" onclick="chgPg(1)">+</button>
+          <span class="pg-note">pages</span>
+        </div>
+        <div class="err" id="e_pages">⚠ Min 1, max 500 pages</div>
+      </div>
+
+      <div class="field">
+        <label class="lbl">Reference File <span class="opt-note">(PDF/DOC — max 10 MB, optional)</span></label>
+        <div class="file-drop" id="fileDrop">
+          <input type="file" id="f_file" accept=".pdf,.doc,.docx" onchange="handleFile(this)"/>
+          <div class="file-ico">📎</div>
+          <p>Drag & drop or <strong>browse files</strong></p>
+          <p class="file-types">PDF, DOC, DOCX only</p>
+        </div>
+        <div class="file-info hidden" id="fileInfo">📄 <span id="fileInfoTxt"></span></div>
+        <div class="err" id="e_file">⚠ Invalid file type or size exceeds 10 MB</div>
+        <small style="color:var(--mist3);font-size:.72rem;margin-top:4px;display:block">Note: In static mode, file names are noted but files are not uploaded to a server.</small>
+      </div>
+
+      <div class="field">
+        <label class="lbl">Writing Instructions</label>
+        <textarea id="f_instructions" placeholder="e.g. Use blue pen, neat cursive, add margin headings, skip page 4 cover…"></textarea>
+      </div>
+
+      <!-- Live Bill -->
+      <div class="live-bill" id="liveBill">
+        <div class="lb-head">💡 Live Price Estimate</div>
+        <div class="lb-row"><span class="lb-l">Pages</span><span class="lb-v" id="b_pg">5</span></div>
+        <div class="lb-row"><span class="lb-l">Base Cost (first 15 @ ₹5, rest @ ₹3)</span><span class="lb-v" id="b_base">₹25.00</span></div>
+        <div class="lb-row"><span class="lb-l">Graph Charges (+₹3/page, if selected)</span><span class="lb-v" id="b_graph">₹0.00</span></div>
+        <div class="lb-total"><span>Grand Total</span><span class="lb-total-v" id="b_total">₹25.00</span></div>
+      </div>
+
+      <!-- Terms -->
+      <div class="terms-box">
+        <h4 class="terms-title">⚠️ Terms & Conditions</h4>
+        <ul class="terms-list">
+          <li>No refunds once the order is assigned to a writer.</li>
+          <li>Accuracy depends entirely on the instructions provided.</li>
+          <li>Delivery timelines are estimates and may vary.</li>
+          <li>Uploaded files are reference only — do not share confidential data.</li>
+        </ul>
+        <div class="agree-row">
+          <input type="checkbox" id="f_terms"/>
+          <label for="f_terms">I have read and agree to the <strong>Terms & Conditions</strong>. I understand no refund will be issued after order confirmation.</label>
+        </div>
+        <div class="err" id="e_terms">⚠ You must agree to proceed</div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="nextStep(2)">← Back</button>
+        <button class="btn btn-primary" id="submitBtn" onclick="submitOrder()">🚀 Place Order</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 4 — Success -->
+  <section id="s4" class="step-section hidden">
+    <div class="success-card">
+      <div class="success-center">
+        <div class="success-icon">✓</div>
+        <h2 class="success-title">Order Confirmed! 🎉</h2>
+        <p class="success-sub">Your handwritten work order has been placed successfully.</p>
+        <div class="oid-badge" id="finalOid"></div>
+      </div>
+
+      <div class="info-section">
+        <h3 class="info-sec-title">Customer Details</h3>
+        <div class="info-grid" id="fin_customer"></div>
+      </div>
+      <div class="info-section">
+        <h3 class="info-sec-title">Academic Details</h3>
+        <div class="info-grid" id="fin_academic"></div>
+      </div>
+      <div class="info-section">
+        <h3 class="info-sec-title">Bill Breakdown</h3>
+        <div class="live-bill" id="fin_bill">
+          <div class="lb-row"><span class="lb-l">Subject</span><span class="lb-v" id="fin_sub"></span></div>
+          <div class="lb-row"><span class="lb-l">Work Type</span><span class="lb-v" id="fin_wt"></span></div>
+          <div class="lb-row"><span class="lb-l">Pages</span><span class="lb-v" id="fin_pg"></span></div>
+          <div class="lb-row"><span class="lb-l">Base Cost</span><span class="lb-v" id="fin_base"></span></div>
+          <div class="lb-row"><span class="lb-l">Graph Charges</span><span class="lb-v" id="fin_graph"></span></div>
+          <div class="lb-total"><span>Grand Total</span><span class="lb-total-v" id="fin_total"></span></div>
+        </div>
+      </div>
+
+      <div class="info-section" style="border-top:none;padding-top:0">
+        <button class="btn btn-wa btn-full" id="waBtn">💬 Confirm on WhatsApp</button>
+        <button class="btn btn-dl btn-full" onclick="downloadBill()">⬇️ Download Bill as PDF</button>
+        <button class="btn btn-secondary btn-full" style="margin-top:10px" onclick="resetOrder()">+ Place Another Order</button>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /stepper-wrap -->
+</div><!-- /container -->
+</main>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="container">
+    <p>Support: <a href="mailto:ht786098@gmail.com">ht786098@gmail.com</a>
+    &nbsp;·&nbsp;<a href="mailto:ht786098@gmail.com?subject=Issue%20Report">⚠️ Report Issue</a></p>
+    <p class="footer-copy">© 2025 ScriptMate · Academic Handwriting Service</p>
+  </div>
+</footer>
+
+<!-- History Panel -->
+<div class="overlay hidden" id="overlay" onclick="closeHistory()"></div>
+<aside class="side-panel hidden" id="histPanel" role="dialog" aria-label="Order History">
+  <div class="panel-head">
+    <h2>📋 Order History</h2>
+    <button class="panel-close" onclick="closeHistory()">✕</button>
+  </div>
+  <div class="panel-body" id="histBody"></div>
+</aside>
+
+<script src="static/js/main.js"></script>
+</body>
+</html>

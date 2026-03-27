@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ScriptMate — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="static/css/admin.css"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- LOGIN GATE -->
+<div id="loginGate" style="display:flex">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="logo-icon">✒️</div>
+      <h1>Script<span>Mate</span></h1>
+      <p>Admin Dashboard</p>
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" id="adminPwd" placeholder="Enter admin password" autocomplete="current-password"/>
+    </div>
+    <div class="login-err" id="loginErr">Incorrect password. Please try again.</div>
+    <button class="btn-login" onclick="doLogin()">Sign In →</button>
+    <p style="margin-top:14px;font-size:.72rem;color:#888;text-align:center">Static mode — data stored in browser localStorage</p>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="hidden">
+
+  <!-- Header -->
+  <header class="dash-header">
+    <div class="dash-header-left">
+      <a class="dash-logo" href="index.html" target="_blank">
+        <div class="li">✒️</div>
+        <span>Script<em>Mate</em></span>
+      </a>
+      <span class="dash-badge">Admin</span>
+      <div class="view-title-wrap">
+        <div class="view-title-main" id="viewTitle">Overview</div>
+        <div class="view-title-sub" id="viewSub">All time statistics</div>
+      </div>
+    </div>
+    <div class="dash-header-right">
+      <button class="btn-sm" onclick="loadAll()">↻ Refresh</button>
+      <button class="btn-sm" onclick="seedDemo()">🌱 Seed Demo</button>
+      <a class="btn-sm" href="index.html" target="_blank">🌐 View Site</a>
+      <button class="btn-sm danger" onclick="doLogout()">Sign Out</button>
+    </div>
+  </header>
+
+  <!-- Body -->
+  <div class="dash-body">
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div class="sb-section">Navigation</div>
+      <button class="sb-link active" onclick="switchView('overview',this)"><span class="sb-ico">📊</span> Overview</button>
+      <button class="sb-link" onclick="switchView('orders',this)"><span class="sb-ico">📋</span> Orders</button>
+      <button class="sb-link" onclick="switchView('analytics',this)"><span class="sb-ico">📈</span> Analytics</button>
+    </nav>
+
+    <!-- Content -->
+    <div class="dash-content">
+
+      <!-- OVERVIEW VIEW -->
+      <div class="dash-view" id="view-overview">
+        <!-- KPIs -->
+        <div class="kpi-grid">
+          <div class="kpi-card"><div class="kpi-icon">📦</div><div class="kpi-val" id="k_orders">—</div><div class="kpi-lbl">Total Orders</div></div>
+          <div class="kpi-card"><div class="kpi-icon">💰</div><div class="kpi-val" id="k_rev">—</div><div class="kpi-lbl">Total Revenue</div></div>
+          <div class="kpi-card"><div class="kpi-icon">📄</div><div class="kpi-val" id="k_pages">—</div><div class="kpi-lbl">Pages Written</div></div>
+          <div class="kpi-card"><div class="kpi-icon">📐</div><div class="kpi-val" id="k_avg">—</div><div class="kpi-lbl">Avg Order Value</div></div>
+        </div>
+
+        <!-- Charts row 1 -->
+        <div class="chart-grid">
+          <div class="chart-card">
+            <div class="chart-title">📈 Revenue Trend (14 days)</div>
+            <div class="chart-wrap"><canvas id="chartTrend"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">🎓 Orders by Level</div>
+            <div class="chart-wrap"><canvas id="chartLevel"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Charts row 2 -->
+        <div class="chart-grid">
+          <div class="chart-card">
+            <div class="chart-title">📝 Orders by Work Type</div>
+            <div class="chart-wrap"><canvas id="chartWorkType"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">💸 Revenue by Level</div>
+            <div class="chart-wrap"><canvas id="chartRevLevel"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Charts row 3 -->
+        <div class="chart-grid-3">
+          <div class="chart-card">
+            <div class="chart-title">📄 Pages Distribution</div>
+            <div class="chart-wrap-sm"><canvas id="chartPages"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">📊 Graphs vs No Graphs</div>
+            <div class="chart-wrap-sm"><canvas id="chartGraphs"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">💰 Revenue by Work Type</div>
+            <div class="chart-wrap-sm"><canvas id="chartRevWt"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Semester chart -->
+        <div class="chart-card" style="margin-bottom:24px">
+          <div class="chart-title">🗓 Orders by Semester</div>
+          <div class="chart-wrap"><canvas id="chartSem"></canvas></div>
+        </div>
+      </div>
+
+      <!-- ORDERS VIEW -->
+      <div class="dash-view hidden" id="view-orders">
+        <div class="table-toolbar">
+          <input class="srch-inp" id="searchQ" type="text" placeholder="🔍 Search orders…" oninput="filterOrders()"/>
+          <select class="filter-sel" id="filterLvl" onchange="filterOrders()">
+            <option value="">All Levels</option>
+            <option>B.Tech</option><option>Degree</option><option>Masters</option><option>Diploma</option>
+          </select>
+          <select class="filter-sel" id="filterWt" onchange="filterOrders()">
+            <option value="">All Types</option>
+            <option>Assignment</option><option>Class Work</option><option>Record</option><option>Observation</option>
+          </select>
+          <span class="orders-count" id="ordersCount">0 orders</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th onclick="sortTable('id')">Order ID</th>
+                <th onclick="sortTable('full_name')">Name</th>
+                <th onclick="sortTable('college')">College</th>
+                <th onclick="sortTable('subject')">Subject</th>
+                <th onclick="sortTable('level')">Level</th>
+                <th onclick="sortTable('work_type')">Type</th>
+                <th onclick="sortTable('pages')">Pages</th>
+                <th onclick="sortTable('grand_total')">Total</th>
+                <th onclick="sortTable('created_at')">Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="ordersBody">
+              <tr><td colspan="10" class="no-data">Loading orders…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ANALYTICS VIEW -->
+      <div class="dash-view hidden" id="view-analytics">
+        <div id="summaryStats" style="margin-bottom:24px">
+          <p style="color:var(--mist3);font-size:.82rem">Loading analytics…</p>
+        </div>
+      </div>
+
+    </div><!-- /dash-content -->
+  </div><!-- /dash-body -->
+</div><!-- /dashboard -->
+
+<!-- Order Modal -->
+<div class="modal-overlay hidden" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalTitle">Order Details</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-actions">
+      <button onclick="confirmDelete(window._modalOrder?.id)" class="danger">🗑 Delete</button>
+      <button onclick="printModalBill()" class="primary">🖨 Print Bill</button>
+      <button onclick="closeModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="static/js/admin.js"></script>
+</body>
+</html>
