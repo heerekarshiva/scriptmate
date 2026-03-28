@@ -1,9 +1,14 @@
 /* ═══════════════════════════════════════════════
-   ScriptMate — Admin Dashboard JS (Static / GitHub Pages)
-   All API calls replaced with localStorage reads.
-   Admin password checked locally (configurable below).
+   ScriptMate — Admin Dashboard JS
+   Reads from Google Apps Script (shared backend)
+   Falls back to localStorage for demo/offline
 ═══════════════════════════════════════════════ */
 'use strict';
+
+/* ══════════════════════════════════════════════
+   ▶▶ MUST MATCH the GAS_URL in main.js
+══════════════════════════════════════════════ */
+const GAS_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
 
 /* ── CONFIG: Change this password ── */
 const ADMIN_PASSWORD = 'ScriptMate@2025';
@@ -14,17 +19,17 @@ const setText = (id,v) => { const e=g(id); if(e) e.textContent=v; };
 const xss     = s => String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
   .replace(/>/g,'&gt;').replace(/"/g,'&quot;').trim().substring(0,600);
 
-/* ── LocalStorage keys (must match main.js) ── */
+/* ── LocalStorage (fallback only) ── */
 const ORDERS_KEY = 'sm5_orders';
 const LS = {
   get(k){ try{return JSON.parse(localStorage.getItem(k));}catch{return null;} },
   set(k,v){ try{localStorage.setItem(k,JSON.stringify(v));}catch{} },
 };
 
-/* ── Auth (session-only) ── */
+/* ── Auth ── */
 let isLoggedIn = sessionStorage.getItem('sm_admin_authed') === '1';
 
-/* ── Charts registry ── */
+/* ── Charts ── */
 const PALETTE = ['#2a9d5c','#5b8dee','#d4a843','#9b72eb','#e05252','#22c5a4','#e89c45'];
 const charts  = {};
 
@@ -84,12 +89,35 @@ function autoLogin() {
   }
 }
 
-/* ── Load all (from localStorage) ── */
-function loadAll() {
-  const orders = LS.get(ORDERS_KEY) || [];
-  allOrders = orders;
-  filteredOrders = [...allOrders];
+/* ── Load orders from GAS or localStorage fallback ── */
+async function loadAll() {
+  setText('ordersCount','Loading…');
+  toast('Fetching orders…');
 
+  const gasConfigured = GAS_URL && GAS_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
+
+  if (gasConfigured) {
+    try {
+      const resp = await fetch(GAS_URL + '?action=getOrders', { method: 'GET' });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const data = await resp.json();
+      /* GAS returns { orders: [...] } */
+      const orders = Array.isArray(data) ? data : (data.orders || []);
+      allOrders = orders;
+    } catch(err) {
+      console.warn('GAS fetch failed, falling back to localStorage:', err);
+      toast('⚠️ Could not reach server. Showing local data only.', 'warn');
+      allOrders = LS.get(ORDERS_KEY) || [];
+    }
+  } else {
+    /* No GAS configured — use localStorage (same browser only) */
+    allOrders = LS.get(ORDERS_KEY) || [];
+    if (!allOrders.length) {
+      showSetupBanner();
+    }
+  }
+
+  filteredOrders = [...allOrders];
   const stats = computeStats(allOrders);
   renderKPIs(stats);
   renderAllCharts(stats, allOrders);
@@ -99,7 +127,12 @@ function loadAll() {
   toast(`Loaded ${allOrders.length} orders ✓`);
 }
 
-/* ── Compute stats locally (mirrors Flask /api/admin/stats) ── */
+function showSetupBanner() {
+  const banner = g('setupBanner');
+  if (banner) banner.classList.remove('hidden');
+}
+
+/* ── Stats ── */
 function computeStats(orders) {
   const s = {};
   s.total_orders  = orders.length;
@@ -125,7 +158,6 @@ function computeStats(orders) {
     else s.by_pages_bucket['31+']++;
   });
 
-  // Revenue trend: group by date, last 14 days
   const byDate = {};
   const cutoff = new Date(); cutoff.setDate(cutoff.getDate()-14);
   orders.forEach(o => {
@@ -229,7 +261,7 @@ function renderRevWtChart(orders) {
 
 /* ── Summary stats ── */
 function renderSummaryStats(orders) {
-  if(!orders.length){g('summaryStats').innerHTML='<p style="color:var(--mist3);font-size:.82rem">No data yet. Place an order or seed demo data.</p>';return;}
+  if(!orders.length){g('summaryStats').innerHTML='<p style="color:var(--mist3);font-size:.82rem">No data yet. Place an order to see stats here.</p>';return;}
   const total=orders.length;
   const revenue=orders.reduce((s,o)=>s+(o.grand_total||0),0);
   const pages=orders.reduce((s,o)=>s+(o.pages||0),0);
@@ -255,7 +287,7 @@ function renderTable(orders) {
   const body=g('ordersBody');
   setText('ordersCount',`${orders.length} orders`);
   if(!orders.length){
-    body.innerHTML=`<tr><td colspan="10" class="no-data">No orders found. ${allOrders.length?'Adjust your filters.':'No orders yet — seed demo data or place an order!'}</td></tr>`;
+    body.innerHTML=`<tr><td colspan="10" class="no-data">No orders found. ${allOrders.length?'Adjust your filters.':'No orders yet — place an order from the main page!'}</td></tr>`;
     return;
   }
   body.innerHTML=orders.map(o=>`<tr>
@@ -341,8 +373,18 @@ function viewOrder(oid) {
 function closeModal(){g('modalOverlay').classList.add('hidden');}
 
 /* ── Delete order ── */
-function confirmDelete(oid) {
+async function confirmDelete(oid) {
   if(!confirm(`Delete order ${oid}?\n\nThis cannot be undone.`)) return;
+
+  const gasConfigured = GAS_URL && GAS_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
+  if (gasConfigured) {
+    try {
+      await fetch(GAS_URL + `?action=deleteOrder&id=${encodeURIComponent(oid)}`, { method: 'GET' });
+    } catch(err) {
+      console.warn('GAS delete failed:', err);
+    }
+  }
+
   allOrders = allOrders.filter(o=>o.id!==oid);
   filteredOrders = filteredOrders.filter(o=>o.id!==oid);
   LS.set(ORDERS_KEY, allOrders);
@@ -378,7 +420,6 @@ function switchView(view,el) {
   setText('viewTitle',titles[view]||view);
   setText('viewSub',subs[view]||'');
 }
-
 
 /* ── Date formatter ── */
 function fmtDate(ts) {
