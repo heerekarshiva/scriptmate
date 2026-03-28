@@ -1,15 +1,22 @@
 /* ═══════════════════════════════════════════════
-   ScriptMate — Static Frontend JS (GitHub Pages)
-   All backend calls replaced with localStorage.
+   ScriptMate — Static Frontend JS
+   Orders sent to Google Apps Script Web App
+   + localStorage fallback for offline history
 ═══════════════════════════════════════════════ */
 'use strict';
+
+/* ══════════════════════════════════════════════
+   ▶▶ CONFIGURE YOUR GOOGLE APPS SCRIPT URL HERE
+   See README.md for setup instructions
+══════════════════════════════════════════════ */
+const GAS_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
 
 /* ── Helpers ── */
 const g       = id => document.getElementById(id);
 const setText = (id,v) => { const e=g(id); if(e) e.textContent=v; };
 const xss     = s => String(s??'')
   .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-  .replace(/"/g,'&quot;').replace(/'/g,'&#x27;').replace(/\//g,'&#x2F;')
+  .replace(/\"/g,'&quot;').replace(/'/g,'&#x27;').replace(/\//g,'&#x2F;')
   .trim().substring(0,800);
 
 /* ── Client-side rate limiter ── */
@@ -37,7 +44,7 @@ const LS = {
   del(k){ localStorage.removeItem(k); }
 };
 
-/* ── Pricing (pure local — same formula as backend) ── */
+/* ── Pricing ── */
 function calcPrice(pages, hasGraphs) {
   const base = pages <= 15 ? pages * 5 : (75 + (pages - 15) * 3);
   const gc   = hasGraphs ? pages * 3 : 0;
@@ -157,7 +164,7 @@ function clearSaved() {
   toast('Saved data cleared.');
 }
 
-/* ── Pricing (fully local) ── */
+/* ── Pricing ── */
 function calcBillLocal() {
   const pg=parseInt(g('f_pages').value)||0, gr=g('f_graphs').checked;
   const p = calcPrice(pg, gr);
@@ -174,7 +181,7 @@ function chgPg(d) {
   calcBillLocal();
 }
 
-/* ── File handling (local only — note filename, no upload) ── */
+/* ── File handling ── */
 function handleFile(inp) {
   const f=inp.files[0], err=g('e_file');
   if(!f) return;
@@ -218,8 +225,8 @@ function genOrderId() {
   return 'SM-'+ts+'-'+rand;
 }
 
-/* ── Submit order — stored locally + WhatsApp notify ── */
-function submitOrder() {
+/* ── Submit order ── */
+async function submitOrder() {
   const a=vf('f_subject','e_subject','subject');
   const pg=parseInt(g('f_pages').value)||0;
   const pb=pg>=1&&pg<=500;
@@ -256,7 +263,29 @@ function submitOrder() {
     grand_total:  pricing.grand_total,
   };
 
-  /* Save to localStorage orders store */
+  /* ── Save to Google Apps Script (shared backend) ── */
+  const gasConfigured = GAS_URL && GAS_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
+  if (gasConfigured) {
+    try {
+      const submitBtn = g('submitBtn');
+      if(submitBtn){ submitBtn.disabled=true; submitBtn.textContent='Submitting…'; }
+      const resp = await fetch(GAS_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      // no-cors means we can't read response, but if no error thrown it was sent
+    } catch(err) {
+      console.warn('GAS submit failed:', err);
+      toast('⚠️ Could not sync to server. Order saved locally.', 'err');
+    } finally {
+      const submitBtn = g('submitBtn');
+      if(submitBtn){ submitBtn.disabled=false; submitBtn.textContent='Place Order'; }
+    }
+  }
+
+  /* ── Always save locally too (for user's own history) ── */
   let orders = LS.get(LS.ORDERS) || [];
   orders.unshift(payload);
   if(orders.length > 500) orders = orders.slice(0, 500);
@@ -455,9 +484,9 @@ function toast(msg,type='') {
 /* ── Init ── */
 document.addEventListener('DOMContentLoaded',()=>{
   loadSaved(); calcBillLocal(); renderStepper(1);
-  // DB badge: static mode
   const dot=g('dbDot'); if(dot) dot.classList.add('on');
-  setText('dbTxt','Static Mode');
+  const gasConfigured = GAS_URL && GAS_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
+  setText('dbTxt', gasConfigured ? 'Cloud Sync ON' : 'Static Mode — Setup GAS');
 
   [['f_name','e_name','name'],['f_phone','e_phone','phone'],['f_email','e_email','email'],
    ['f_college','e_college','college'],['f_roll','e_roll','roll'],['f_subject','e_subject','subject']
